@@ -1,0 +1,211 @@
+# Visual assistant configuration. Every value shown is the built-in default
+# (tests/test_config.py checks that), so you can delete any line you don't
+# change. The README's "Configuration reference" explains each value.
+
+camera:
+  source: 0              # webcam index, camera name (DroidCam), video file path, or stream URL (http://..., rtsp://...)
+  width: 1920
+  height: 1080
+  fps: 30
+  backend: auto          # auto (DirectShow for webcam numbers on Windows) | dshow | msmf | ffmpeg | any
+  mjpg: false             # ask the webcam for MJPG; needed for 720p30 on many webcams
+  probe_s: 2.0           # no frames / blank green picture at start: retry in the camera's default mode
+  mirror: false          # flip left/right if your driver mirrors the image
+  rotate: 0              # rotate clockwise 0/90/180/270 (e.g. a phone stream that arrives sideways)
+  loop_video: false      # replay: loop the file
+  camera_id: wearable    # tag on every event (a fixed home camera would get its own id)
+
+direction:
+  mode: zones            # zones (webcam: frame spread over 10..2 o'clock) | angle (true angle, wide lens)
+  zones: [10, 11, 12, 1, 2]
+  hfov_deg: 70.0         # horizontal field of view, used by angle mode
+  pan_strength: 1.0      # 0 = no stereo panning
+
+faces:
+  enabled: true
+  max_fps: 15.0
+  detection:
+    backend: mtcnn       # mtcnn (bundled) | yunet (faster; needs models/face_detection_yunet_2023mar.onnx)
+    yunet_model_path: models/face_detection_yunet_2023mar.onnx
+    scale: 0.5          # detect on a downscaled frame
+    min_confidence: 0.85
+    min_face_px: 40
+    device: cuda
+  alignment:
+    image_size: 160
+    margin: 20
+  quality:               # lenient gate used for recognition
+    min_face_px: 48
+    min_det_confidence: 0.9
+    min_sharpness: 25.0
+    max_roll_deg: 35.0
+    max_yaw_ratio: 0.45
+    pitch_ratio_range: [0.2, 0.85]
+    brightness_range: [35.0, 220.0]
+    max_saturated_fraction: 0.2
+    edge_margin_frac: 0.02
+  enroll_quality:        # strict gate: only these frames get saved at enrollment
+    min_face_px: 70
+    min_det_confidence: 0.95
+    min_sharpness: 35.0
+    max_roll_deg: 30.0
+    max_yaw_ratio: 0.35
+    pitch_ratio_range: [0.25, 0.8]
+    brightness_range: [40.0, 215.0]
+    max_saturated_fraction: 0.15
+    edge_margin_frac: 0.04
+  embedding:
+    pretrained: vggface2
+    device: cuda
+    fp16: true
+  tracking:
+    iou_threshold: 0.2
+    timeout_s: 1.0       # encounter ends after this long unseen
+    max_samples: 8
+  matching:              # run scripts/calibrate_faces.py and paste its suggestions
+    t_match: 0.65        # averaged track embedding must reach this
+    t_frame: 0.6         # per-frame vote threshold
+    t_sure: 0.75         # >= "That's Sarah", below = "I think that's Sarah"
+    margin: 0.08         # best must beat the runner-up by this much
+    min_samples: 3
+    agree_frames: 3      # consecutive agreeing frames before announcing
+    t_novel: 0.92        # enrollment keeps views less similar than this to each other
+  announce:
+    cooldown_s: 60.0
+    approach_cooldown_s: 45.0
+    encounter_gap_s: 30.0  # seen again within this = same encounter, not re-announced
+    approach_wait_s: 0.4
+    upgrade_to_approaching: true
+    max_age_s: 2.5       # drop announcements that couldn't be spoken within this time
+  approach:
+    window_s: 0.8
+    min_points: 4
+    growth_per_s: 0.3    # d ln(face height)/dt; 0.3 = ~35% growth per second
+    settle_s: 0.3        # ignore a new track's first moments (face turning back into view)
+    min_growth: 1.3      # face must have grown 1.3x over the last lookback_s (leaning in doesn't count)
+    lookback_s: 2.0
+    max_face_frac: 0.3   # face taller than 30% of the frame is already close: never "approaching"
+
+enrollment:
+  prompt: "Heard {name}. Ask to save?"   # headphones; the user then asks the person aloud
+  consent_timeout_s: 12.0
+  capture_s: 4.0
+  min_exemplars: 3
+  max_exemplars: 10
+  speaking_pad_s: 0.6
+  correction_window_s: 15.0
+  consent_for_manual: true
+  prompt_multi: "Heard {name}, {where}. Ask to save?"   # several faces in view: says which one
+  talk_min: 0.015        # mouth motion that counts as talking (debug window shows "talk" per face)
+  talk_ratio: 1.5        # the talker must move their mouth 1.5x more than anyone else
+  require_talking: false # several unknown faces and nobody clearly talking: don't guess
+  min_self_similarity: 0.5   # captured views must match the person being enrolled
+  reacquire_s: 2.0       # face hidden by someone walking past: keep the session this long
+
+objects:
+  enabled: true
+  detector: owlv2        # owlv2 | yolo_world (optional, pip install ultralytics)
+  owlv2_model: google/owlv2-base-patch16-ensemble
+  yolo_world_model: yolov8s-worldv2.pt
+  device: cuda
+  fp16: true
+  scan_fps: 1.5
+  det_threshold: 0.12
+  max_candidates: 12     # crops embedded per scan (overlapping boxes merged first)
+  embedder_model: ViT-B-32
+  embedder_pretrained: laion2b_s34b_b79k
+  t_item: 0.82
+  item_margin: 0.02
+  agree_scans: 2
+  agree_window: 3
+  enroll_delay_s: 1.5    # wait for the spoken prompt before capturing
+  enroll_s: 4.0
+  enroll_fps: 3.0
+  enroll_max_exemplars: 8
+  keep_sightings: 20
+  sighting_interval_s: 10.0
+  in_view_s: 3.0
+  snapshot_width: 640
+  generic_queries: [keys, wallet, earbuds case, headphones, phone, glasses, water bottle, bag, remote control, card]
+  context_queries: [table, desk, counter, shelf, bed, couch, chair, floor, laptop, keyboard, monitor, backpack, sink, door, plant, lamp, book]
+  surface_labels: [table, desk, counter, shelf, bed, couch, chair, floor]
+
+places:                  # extra context for "where's my X?": named places + who you were with
+  enabled: true
+  enroll_delay_s: 1.0    # "this is the kitchen": wait for the prompt...
+  enroll_s: 12.0          # ...then capture views while the user turns around
+  max_views: 20
+  t_place: 0.8           # scene similarity needed to call it a saved place
+  margin: 0.02
+  wifi: true             # laptop's Wi-Fi network (Windows 11: Settings > Privacy & security > Location must be on)
+  wifi_bonus: 0.05
+  other_network_penalty: 0.2
+  bluetooth: false       # nearby Bluetooth LE devices as a room fingerprint (pip install -r requirements-bluetooth.txt)
+  ble_scan_s: 4.0
+  ble_min_rssi: -80
+  ble_bonus: 0.05
+  scan_interval_s: 20.0
+  mention_people: true   # "You were with Sarah."
+  mention_network: true  # "That was on the CampusNet network." (only when it's not the current one)
+
+speech_in:
+  enabled: true
+  input_device: null     # null = default microphone; or an index/name from scripts/check_setup.py --audio
+  ambient: true          # always listen for introductions and yes/no answers
+  ptt_key: ctrl_r        # hold to give a command
+  vad_threshold: 0.5
+  min_speech_ms: 250
+  end_silence_ms: 600
+  pre_roll_ms: 300
+  max_segment_s: 12.0
+  ptt_tail_ms: 250
+
+stt:
+  model: small.en        # tiny.en | base.en | small.en | medium.en
+  device: cuda
+  compute_type: int8_float16   # on CPU use int8
+  beam_size: 1
+  language: en
+  cpu_threads: 4
+  no_speech_threshold: 0.6
+  drop_hallucinations: true
+
+tts:
+  engine: piper          # piper | pyttsx3 | print
+  piper_voice: models/piper/en_US-lessac-medium.onnx
+  speed: 1.15
+  volume: 0.9
+  pyttsx3_rate: 190
+  output_device: null    # null = default output (your headphones)
+  tones: true
+  interrupt_for_approaching: true
+  answer_max_age_s: 30.0
+  info_max_age_s: 8.0
+
+commands:
+  confirm_forget: true
+  confirm_timeout_s: 10.0
+
+storage:
+  db_path: data/assistant.db
+  snapshot_dir: data/snapshots
+  log_dir: data/logs
+  log_events: true
+
+cloud:
+  vlm_enabled: false     # OFF: when on, "in detail" questions send that item's snapshot to the cloud
+  provider: anthropic
+  model: claude-haiku-5-5
+  api_key_env: ANTHROPIC_API_KEY
+  max_tokens: 150
+  image_max_side: 1024
+  timeout_s: 20.0
+
+debug:
+  window: true
+  window_name: "Visual assistant (q to quit)"
+  show_unknown: true
+  record_path: ""        # e.g. data/demo.mp4 to save the annotated window
+  record_fps: 30.0
+  max_height: 720        # shrink the window for tall phone video (processing uses full frames)
+  console_input: true

@@ -1,0 +1,8 @@
+-r requirements.txt
+pytest==9.1.1
+matplotlib==3.11.2        # scripts/calibrate_faces.py --plot
+scikit-image==0.26.0      # sample photo for tests/test_real_models.py
+
+# Optional extras (install only if you turn them on):
+#   cloud.vlm_enabled: true      -> pip install anthropic==2.3.0
+#   objects.detector: yolo_world -> pip install ultralytics==8.4.180

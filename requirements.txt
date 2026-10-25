@@ -1,0 +1,36 @@
+# Visual assistant runtime dependencies (pinned; checked for Windows wheels on
+# Python 3.11-3.13 on 2026-10-24).
+#
+# Install in THIS order (README "Windows setup" explains why):
+#   1. pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cu126
+#   2. pip install facenet-pytorch==2.6.0 --no-deps
+#   3. pip install -r requirements.txt
+#
+# CUDA 12.6 (cu126) on purpose: ctranslate2 (faster-whisper) loads cublas64_12.dll,
+# which the cu126 torch build ships. A cu130 torch build would not have it.
+
+numpy==2.5.3 ; python_version >= "3.12"
+numpy==2.4.6 ; python_version < "3.12"     # numpy 2.5 has no Python 3.11 wheels
+opencv-python==5.0.0.93
+Pillow==12.3.0
+PyYAML==6.0.3
+requests==2.34.2
+tqdm==4.70.1
+cv2-enumerate-cameras==1.4.0 ; sys_platform == "win32"   # camera names (--source DroidCam, check_setup --cameras)
+
+# speech in
+faster-whisper==1.2.1
+ctranslate2==4.8.3
+av==18.1.0                 # faster-whisper 1.2.1's decoder passes an argument PyAV 19 removed
+onnxruntime==1.31.0        # Silero VAD + Piper on the CPU (do NOT also install onnxruntime-gpu)
+sounddevice==0.5.6
+soundfile==0.14.0
+pynput==1.8.2
+
+# speech out
+piper-tts==1.8.0           # GPL-3.0 licensed; fine for a hackathon
+pyttsx3==2.99
+
+# objects
+transformers==5.20.2       # OWLv2
+open-clip-torch==3.3.0     # CLIP image embeddings

@@ -1,0 +1,14 @@
+# Optional: Bluetooth room fingerprints for named places (config: places.bluetooth: true).
+#   pip install -r requirements-bluetooth.txt
+# The winrt packages are pinned to 3.2.1 on purpose: winrt 4.x came out on 2026-10-24
+# and bleak 3.0.2 hasn't been released against it yet.
+bleak==3.0.2
+winrt-runtime==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Devices.Bluetooth==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Devices.Bluetooth.Advertisement==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Devices.Bluetooth.GenericAttributeProfile==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Devices.Enumeration==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Devices.Radios==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Foundation==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Foundation.Collections==3.2.1 ; sys_platform == "win32"
+winrt-Windows.Storage.Streams==3.2.1 ; sys_platform == "win32"
